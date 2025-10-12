@@ -3,6 +3,7 @@ import { Slot, Workspace } from '../types/geff';
 import { SlotManager } from '../core/slotManager';
 import { WorkspaceManager } from '../core/workspaceManager';
 import { Notice } from './notice';
+import { DataManager } from '../core/dataManager';
 
 interface SlotItem {
   slot: Slot;
@@ -13,11 +14,14 @@ interface SlotItem {
 export class QuickMenu extends Modal {
   private slots: Slot[] = [];
   private activeWorkspace: Workspace | null = null;
+  private selectedIndex: number = 0;
+  private slotElements: HTMLElement[] = [];
 
   constructor(
     app: App,
     private slotManager: SlotManager,
     private workspaceManager: WorkspaceManager,
+    private dataManager: DataManager,
     private notice: Notice
   ) {
     super(app);
@@ -27,6 +31,12 @@ export class QuickMenu extends Modal {
     super.onOpen();
     this.refreshData();
     this.display();
+    this.setupKeyboardHandlers();
+    // Auto-select first item
+    if (this.slots.length > 0) {
+      this.selectedIndex = 0;
+      this.updateSelection();
+    }
   }
 
   private refreshData(): void {
@@ -45,14 +55,7 @@ export class QuickMenu extends Modal {
   private display(): void {
     const { contentEl } = this;
     contentEl.empty();
-
-    // Title
-    contentEl.createEl('h2', {
-      text: this.activeWorkspace
-        ? `${this.activeWorkspace.name} Slots`
-        : 'Quick Menu',
-      cls: 'geff-quick-menu-title',
-    });
+    this.slotElements = [];
 
     // Slots container
     const slotsContainer = contentEl.createDiv({ cls: 'geff-slots-container' });
@@ -74,14 +77,37 @@ export class QuickMenu extends Modal {
         file: file instanceof TFile ? file : null,
       };
 
-      this.createSlotItem(slotsContainer, slotItem);
+      const slotEl = this.createSlotItem(slotsContainer, slotItem);
+      this.slotElements.push(slotEl);
     });
 
     // Add some basic styling
     this.addStyles();
   }
 
-  private createSlotItem(container: HTMLElement, slotItem: SlotItem): void {
+  private truncatePath(path: string, maxLength: number = 50): string {
+    if (path.length <= maxLength) {
+      return path;
+    }
+
+    // Split path by directories
+    const parts = path.split('/');
+
+    // If path has more than 2 parts, truncate middle parts
+    if (parts.length > 2) {
+      const first = parts[0];
+      const last = parts[parts.length - 1];
+      return `${first}/../${last}`;
+    }
+
+    // For simple paths, just truncate with ellipsis
+    return path.substring(0, maxLength - 3) + '...';
+  }
+
+  private createSlotItem(
+    container: HTMLElement,
+    slotItem: SlotItem
+  ): HTMLElement {
     const { slot, index, file } = slotItem;
 
     const slotEl = container.createDiv({ cls: 'geff-slot-item' });
@@ -89,11 +115,13 @@ export class QuickMenu extends Modal {
     // Note path (main content)
     const pathEl = slotEl.createDiv({ cls: 'geff-slot-path' });
 
+    const displayPath = this.truncatePath(slot.notePath);
+
     if (file) {
-      pathEl.textContent = slot.notePath;
+      pathEl.textContent = displayPath;
       pathEl.addClass('geff-slot-valid');
     } else {
-      pathEl.textContent = `${slot.notePath} (missing)`;
+      pathEl.textContent = `${displayPath} (missing)`;
       pathEl.addClass('geff-slot-missing');
     }
 
@@ -117,6 +145,8 @@ export class QuickMenu extends Modal {
     slotEl.addEventListener('mouseleave', () => {
       slotEl.removeClass('geff-slot-hover');
     });
+
+    return slotEl;
   }
 
   private addStyles(): void {
@@ -146,6 +176,16 @@ export class QuickMenu extends Modal {
       .geff-slot-item:hover {
         background-color: var(--background-modifier-hover);
         border-color: var(--interactive-accent);
+      }
+      
+      .geff-slot-selected {
+        background-color: var(--interactive-accent);
+        border-color: var(--interactive-accent);
+        color: var(--text-on-accent);
+      }
+      
+      .geff-slot-selected .geff-slot-path {
+        color: var(--text-on-accent);
       }
       
       .geff-slot-path {
@@ -191,8 +231,169 @@ export class QuickMenu extends Modal {
     document.head.appendChild(styleEl);
   }
 
+  private setupKeyboardHandlers(): void {
+    const settings = this.dataManager.getSettings();
+    const hotkeys = settings.hotkeys;
+
+    // Enter key
+    this.scope.register([], 'Enter', () => {
+      this.handleEnter();
+      return false;
+    });
+
+    // Navigation hotkeys
+    this.registerHotkey(hotkeys['quick-menu-down'], () =>
+      this.moveSelectionDown()
+    );
+    this.registerHotkey(hotkeys['quick-menu-up'], () => this.moveSelectionUp());
+
+    // Action hotkeys
+    this.registerHotkey(hotkeys['quick-menu-horizontal'], () =>
+      this.openHorizontalSplit()
+    );
+    this.registerHotkey(hotkeys['quick-menu-vertical'], () =>
+      this.openVerticalSplit()
+    );
+    this.registerHotkey(hotkeys['quick-menu-new-tab'], () => this.openNewTab());
+
+    // Arrow keys for navigation (fallback)
+    this.scope.register([], 'ArrowDown', () => {
+      this.moveSelectionDown();
+      return false;
+    });
+
+    this.scope.register([], 'ArrowUp', () => {
+      this.moveSelectionUp();
+      return false;
+    });
+  }
+
+  private registerHotkey(hotkey: string, callback: () => void): void {
+    if (!hotkey) return;
+
+    const parts = hotkey.toLowerCase().split('+');
+    const modifiers: ('Ctrl' | 'Alt' | 'Shift' | 'Meta')[] = [];
+    let key = '';
+
+    parts.forEach((part) => {
+      switch (part) {
+        case 'ctrl':
+          modifiers.push('Ctrl');
+          break;
+        case 'alt':
+          modifiers.push('Alt');
+          break;
+        case 'shift':
+          modifiers.push('Shift');
+          break;
+        case 'meta':
+          modifiers.push('Meta');
+          break;
+        default:
+          key = part;
+          break;
+      }
+    });
+
+    if (key) {
+      this.scope.register(modifiers, key, () => {
+        callback();
+        return false;
+      });
+    }
+  }
+
+  private updateSelection(): void {
+    // Remove previous selection
+    this.slotElements.forEach((el, index) => {
+      el.toggleClass('geff-slot-selected', index === this.selectedIndex);
+    });
+
+    // Scroll selected item into view
+    if (this.slotElements[this.selectedIndex]) {
+      this.slotElements[this.selectedIndex].scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }
+
+  private moveSelectionDown(): void {
+    if (this.slots.length === 0) return;
+    this.selectedIndex = (this.selectedIndex + 1) % this.slots.length;
+    this.updateSelection();
+  }
+
+  private moveSelectionUp(): void {
+    if (this.slots.length === 0) return;
+    this.selectedIndex =
+      this.selectedIndex === 0 ? this.slots.length - 1 : this.selectedIndex - 1;
+    this.updateSelection();
+  }
+
+  private async handleEnter(): Promise<void> {
+    if (this.slots.length === 0) return;
+
+    try {
+      await this.slotManager.gotoSlot(this.selectedIndex);
+      this.close();
+    } catch (error) {
+      this.notice.showError(
+        error instanceof Error ? error.message : String(error)
+      );
+    }
+  }
+
+  private async openHorizontalSplit(): Promise<void> {
+    if (this.slots.length === 0) return;
+
+    const slot = this.slots[this.selectedIndex];
+    const file = this.app.vault.getAbstractFileByPath(slot.notePath);
+
+    if (file instanceof TFile) {
+      // Open in horizontal split
+      this.app.workspace.getLeaf('split').openFile(file);
+      this.close();
+    } else {
+      this.notice.showError(`File not found: ${slot.notePath}`);
+    }
+  }
+
+  private async openVerticalSplit(): Promise<void> {
+    if (this.slots.length === 0) return;
+
+    const slot = this.slots[this.selectedIndex];
+    const file = this.app.vault.getAbstractFileByPath(slot.notePath);
+
+    if (file instanceof TFile) {
+      // Open in vertical split (new pane)
+      const leaf = this.app.workspace.getLeaf(false);
+      await leaf.openFile(file);
+      this.close();
+    } else {
+      this.notice.showError(`File not found: ${slot.notePath}`);
+    }
+  }
+
+  private async openNewTab(): Promise<void> {
+    if (this.slots.length === 0) return;
+
+    const slot = this.slots[this.selectedIndex];
+    const file = this.app.vault.getAbstractFileByPath(slot.notePath);
+
+    if (file instanceof TFile) {
+      // Open in new tab
+      const leaf = this.app.workspace.getLeaf(true);
+      await leaf.openFile(file);
+      this.close();
+    } else {
+      this.notice.showError(`File not found: ${slot.notePath}`);
+    }
+  }
+
   onClose(): void {
     const { contentEl } = this;
     contentEl.empty();
+    this.slotElements = [];
   }
 }

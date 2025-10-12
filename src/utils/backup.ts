@@ -58,6 +58,7 @@ export class BackupUtils {
       const existingData = JSON.parse(existingContent);
 
       // Remove backup-related fields for comparison
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { backupCreatedAt, backupType, ...cleanExistingData } =
         existingData;
       const cleanNewData = { ...newData };
@@ -106,7 +107,7 @@ export class BackupUtils {
     }
   }
 
-  async cleanupOldBackups(keepCount: number = 10): Promise<void> {
+  async cleanupOldBackups(_keepCount: number = 10): Promise<void> {
     // With single backup file approach, no cleanup needed
     // Keeping this method for compatibility but it's now a no-op
     console.log('Geff: Single backup file mode - no cleanup needed');

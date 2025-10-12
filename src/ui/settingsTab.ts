@@ -122,6 +122,31 @@ export class SettingsTab extends PluginSettingTab {
           })
       );
 
+    // Hotkey Settings
+    containerEl.createEl('h3', { text: 'Quick Menu Hotkeys' });
+
+    const hotkeyDescriptions = {
+      'quick-menu-down': 'Move selection down',
+      'quick-menu-up': 'Move selection up',
+      'quick-menu-horizontal': 'Open in horizontal split',
+      'quick-menu-vertical': 'Open in vertical split',
+      'quick-menu-new-tab': 'Open in new tab',
+    };
+
+    Object.entries(hotkeyDescriptions).forEach(([key, description]) => {
+      new Setting(containerEl)
+        .setName(description)
+        .setDesc(`Keyboard shortcut for ${description.toLowerCase()}`)
+        .addText((text) =>
+          text
+            .setPlaceholder('e.g., Alt+J')
+            .setValue(this.getHotkeySetting(key))
+            .onChange(async (value) => {
+              await this.updateHotkeySetting(key, value);
+            })
+        );
+    });
+
     // Data Management
     containerEl.createEl('h3', { text: 'Data Management' });
 
@@ -235,6 +260,23 @@ export class SettingsTab extends PluginSettingTab {
       this.display(); // Refresh settings display
     } catch {
       this.notice.showError('Failed to clear data');
+    }
+  }
+
+  private getHotkeySetting(key: string): string {
+    const settings = this.dataManager.getSettings();
+    return settings.hotkeys?.[key as keyof typeof settings.hotkeys] || '';
+  }
+
+  private async updateHotkeySetting(key: string, value: string): Promise<void> {
+    try {
+      const settings = this.dataManager.getSettings();
+      const updatedHotkeys = { ...settings.hotkeys, [key]: value };
+      this.dataManager.setSettings({ hotkeys: updatedHotkeys });
+      await this.dataManager.saveSettingsToPluginData(this.plugin);
+      this.notice.showSuccess('Hotkey updated');
+    } catch {
+      this.notice.showError('Failed to update hotkey');
     }
   }
 }

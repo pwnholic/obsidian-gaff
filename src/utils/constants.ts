@@ -1,28 +1,10 @@
-export const DEFAULT_SETTINGS = {
-  autoRemoveMissing: true,
-  autoBackup: false,
-  dataPath: 'geff_data.json',
-  uiTheme: 'default' as const,
-  language: 'en' as const,
-  maxSlots: 9,
-  notifications: true,
-  confirmDelete: true,
-};
+import { DEFAULT_SETTINGS, DEFAULT_HOTKEYS } from '../types/geff';
+
+export { DEFAULT_SETTINGS, DEFAULT_HOTKEYS };
 
 export const DEFAULT_WORKSPACE_NAME = 'Default Workspace';
 export const SCHEMA_VERSION = 1;
 export const BACKUP_PREFIX = 'geff_backup_';
-
-export const DEFAULT_HOTKEYS = {
-  'add-current-note': 'Ctrl+Shift+A',
-  'remove-note': 'Ctrl+Shift+R',
-  'open-quick-menu': 'Ctrl+E',
-  'create-workspace': 'Ctrl+Shift+N',
-  'rename-workspace': 'Ctrl+Shift+M',
-  'delete-workspace': 'Ctrl+Shift+D',
-  'export-workspace': 'Ctrl+Shift+X',
-  'import-workspace': 'Ctrl+Shift+I',
-};
 
 export const SLOT_HOTKEYS = {
   1: 'Ctrl+1',

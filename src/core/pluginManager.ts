@@ -164,6 +164,7 @@ export class PluginManager {
         this.app,
         this.slotManager,
         this.workspaceManager,
+        this.dataManager,
         this.notice
       );
       this.statusBar = new StatusBar(
