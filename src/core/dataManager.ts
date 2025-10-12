@@ -90,9 +90,24 @@ export class DataManager {
 
       // Ensure directory exists before writing
       const dirPath = dataFilePath.substring(0, dataFilePath.lastIndexOf('/'));
-      if (dirPath && !this.app.vault.getAbstractFileByPath(dirPath)) {
-        console.log('Geff: Creating directory:', dirPath);
-        await this.app.vault.createFolder(dirPath);
+      if (dirPath) {
+        try {
+          // Check if directory exists using adapter
+          const exists = await this.app.vault.adapter.exists(dirPath);
+          if (!exists) {
+            console.log('Geff: Creating directory:', dirPath);
+            await this.app.vault.adapter.mkdir(dirPath);
+          } else {
+            console.log('Geff: Directory already exists:', dirPath);
+          }
+        } catch (error) {
+          console.warn(
+            'Geff: Failed to ensure directory exists:',
+            dirPath,
+            error
+          );
+          // Continue anyway, as the write operation might still work
+        }
       }
 
       // Count total slots across all workspaces for logging

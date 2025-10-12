@@ -1,0 +1,26 @@
+{
+  "settings": {
+    "autoRemoveMissing": true,
+    "autoBackup": true,
+    "dataPath": ".obsidian/geff.json",
+    "uiTheme": "default",
+    "language": "en",
+    "maxSlots": 9,
+    "notifications": true,
+    "confirmDelete": true
+  },
+  "data": {
+    "schemaVersion": 1,
+    "activeWorkspaceId": "mgndw6vzx5plc76htjg",
+    "workspaces": [
+      {
+        "id": "mgndw6vzx5plc76htjg",
+        "name": "Default Workspace",
+        "createdAt": "2025-10-12T07:29:46.463Z",
+        "updatedAt": "2025-10-12T07:29:46.463Z",
+        "slots": []
+      }
+    ],
+    "updatedAt": "2025-10-12T07:29:46.463Z"
+  }
+}
