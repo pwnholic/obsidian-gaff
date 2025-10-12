@@ -54,6 +54,19 @@ export class SlotManager {
     const data = this.dataManager.getData();
     const workspace = data.workspaces.find((w) => w.id === activeWorkspace.id);
 
+    console.log(
+      'Geff: addCurrentNote - active workspace:',
+      activeWorkspace.name
+    );
+    console.log(
+      'Geff: addCurrentNote - found workspace:',
+      workspace?.name || 'null'
+    );
+    console.log(
+      'Geff: addCurrentNote - workspace slots before:',
+      workspace?.slots.length || 0
+    );
+
     if (!workspace) {
       throw new Error('Workspace not found');
     }
@@ -74,9 +87,14 @@ export class SlotManager {
       }
     }
 
+    console.log(
+      'Geff: addCurrentNote - workspace slots after:',
+      workspace.slots.length
+    );
     workspace.updatedAt = new Date().toISOString();
     this.dataManager.setData(data);
     await this.dataManager.save();
+    console.log('Geff: addCurrentNote - slot saved successfully');
 
     return newSlot;
   }

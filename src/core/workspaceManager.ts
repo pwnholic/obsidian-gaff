@@ -32,8 +32,15 @@ export class WorkspaceManager {
     };
 
     data.workspaces.push(newWorkspace);
+    console.log(
+      'Geff: createWorkspace - adding workspace:',
+      newWorkspace.name,
+      'total workspaces:',
+      data.workspaces.length
+    );
     this.dataManager.setData(data);
     await this.dataManager.save();
+    console.log('Geff: createWorkspace - workspace saved successfully');
 
     return newWorkspace;
   }
@@ -110,8 +117,19 @@ export class WorkspaceManager {
     }
 
     data.activeWorkspaceId = workspaceId;
+    console.log(
+      'Geff: switchWorkspace - switching to:',
+      workspace.name,
+      'activeWorkspaceId:',
+      workspaceId
+    );
+    console.log(
+      'Geff: switchWorkspace - workspace slots count:',
+      workspace.slots.length
+    );
     this.dataManager.setData(data);
     await this.dataManager.save();
+    console.log('Geff: switchWorkspace - workspace switch saved successfully');
 
     return workspace;
   }
