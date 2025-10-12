@@ -44,7 +44,7 @@ export type { Slot, Workspace } from './workspace';
 
 export const DEFAULT_SETTINGS: GeffSettings = {
   autoRemoveMissing: true,
-  autoBackup: true,
+  autoBackup: false,
   dataPath: 'geff_data.json',
   uiTheme: 'default',
   language: 'en',
