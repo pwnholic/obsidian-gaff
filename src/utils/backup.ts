@@ -15,17 +15,9 @@ export class BackupUtils {
     try {
       const backupContent = JSON.stringify(backupData, null, 2);
 
-      const existingFile = this.app.vault.getAbstractFileByPath(dataFilePath);
-
-      if (existingFile) {
-        // Overwrite existing data file with backup data
-        await this.app.vault.modify(existingFile as TFile, backupContent);
-        console.log('Geff: Backup updated to data file:', dataFilePath);
-      } else {
-        // Create new data file with backup data
-        await this.app.vault.create(dataFilePath, backupContent);
-        console.log('Geff: Backup created as data file:', dataFilePath);
-      }
+      // Always use adapter.write to overwrite the file (works for both new and existing files)
+      await this.app.vault.adapter.write(dataFilePath, backupContent);
+      console.log('Geff: Backup overwritten to data file:', dataFilePath);
 
       return dataFilePath;
     } catch (error) {
