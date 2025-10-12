@@ -1,13 +1,10 @@
 import { App, TFile } from 'obsidian';
 import { GeffData } from '../types/geff';
-import { BACKUP_PREFIX } from './constants';
 
 export class BackupUtils {
   constructor(private app: App) {}
 
-  async createBackup(data: GeffData): Promise<string> {
-    const backupFileName = `${BACKUP_PREFIX}latest.json`;
-
+  async createBackup(data: GeffData, dataFilePath: string): Promise<string> {
     // Add timestamp to the backup data for tracking when it was created
     const backupData = {
       ...data,
@@ -18,33 +15,25 @@ export class BackupUtils {
     try {
       const backupContent = JSON.stringify(backupData, null, 2);
 
-      const existingFile = this.app.vault.getAbstractFileByPath(backupFileName);
+      const existingFile = this.app.vault.getAbstractFileByPath(dataFilePath);
 
       if (existingFile) {
-        // Overwrite existing backup file
+        // Overwrite existing data file with backup data
         await this.app.vault.modify(existingFile as TFile, backupContent);
-        console.log('Geff: Backup updated:', backupFileName);
+        console.log('Geff: Backup updated to data file:', dataFilePath);
       } else {
-        // Create new backup file
-        await this.app.vault.create(backupFileName, backupContent);
-        console.log('Geff: Backup created:', backupFileName);
+        // Create new data file with backup data
+        await this.app.vault.create(dataFilePath, backupContent);
+        console.log('Geff: Backup created as data file:', dataFilePath);
       }
 
-      return backupFileName;
+      return dataFilePath;
     } catch (error) {
-      console.error('Failed to create backup:', error);
+      console.error('Failed to create backup to data file:', error);
       // Don't fail the entire operation if backup fails
       console.warn('Continuing without backup');
       return '';
     }
-  }
-
-  async getBackupFiles(): Promise<TFile[]> {
-    const files = this.app.vault.getFiles();
-    return files.filter(
-      (file) =>
-        file.name.startsWith(BACKUP_PREFIX) && file.name.endsWith('.json')
-    );
   }
 
   async restoreFromBackup(backupPath: string): Promise<GeffData> {

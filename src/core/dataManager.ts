@@ -123,7 +123,7 @@ export class DataManager {
       );
 
       if (this.settings.autoBackup) {
-        await this.backupUtils.createBackup(this.data);
+        await this.backupUtils.createBackup(this.data, dataFilePath);
         await this.backupUtils.cleanupOldBackups();
       }
     } catch (error) {

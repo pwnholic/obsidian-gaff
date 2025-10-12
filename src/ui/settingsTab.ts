@@ -51,13 +51,15 @@ export class SettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName('Show notifications')
-      .setDesc('Show notifications for add/remove actions and errors')
+      .setName('Auto-backup')
+      .setDesc(
+        'Create automatic backup to the same data file set above (overwrites with backup timestamp)'
+      )
       .addToggle((toggle) =>
         toggle
-          .setValue(this.dataManager.getSettings().notifications)
+          .setValue(this.dataManager.getSettings().autoBackup)
           .onChange(async (value) => {
-            await this.updateSetting('notifications', value);
+            await this.updateSetting('autoBackup', value);
           })
       );
 
