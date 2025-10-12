@@ -118,7 +118,21 @@ export class WorkspaceManager {
 
   getActiveWorkspace(): Workspace | null {
     const data = this.dataManager.getData();
-    return data.workspaces.find((w) => w.id === data.activeWorkspaceId) || null;
+    const activeWorkspace =
+      data.workspaces.find((w) => w.id === data.activeWorkspaceId) || null;
+    console.log(
+      'Geff: getActiveWorkspace - activeWorkspaceId:',
+      data.activeWorkspaceId
+    );
+    console.log(
+      'Geff: getActiveWorkspace - found workspace:',
+      activeWorkspace?.name || 'null'
+    );
+    console.log(
+      'Geff: getActiveWorkspace - workspace slots count:',
+      activeWorkspace?.slots.length || 0
+    );
+    return activeWorkspace;
   }
 
   getAllWorkspaces(): Workspace[] {

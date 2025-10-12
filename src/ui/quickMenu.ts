@@ -41,6 +41,14 @@ export class QuickMenu extends SuggestModal<SlotSuggestion> {
   private refreshData(): void {
     this.slots = this.slotManager.getSlots();
     this.activeWorkspace = this.workspaceManager.getActiveWorkspace();
+    console.log(
+      'Geff: QuickMenu refreshData - slots count:',
+      this.slots.length
+    );
+    console.log(
+      'Geff: QuickMenu refreshData - active workspace:',
+      this.activeWorkspace?.name || 'null'
+    );
   }
 
   // Returns all available suggestions.

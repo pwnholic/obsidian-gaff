@@ -142,7 +142,9 @@ export class SlotManager {
 
   getSlots(): Slot[] {
     const activeWorkspace = this.workspaceManager.getActiveWorkspace();
-    return activeWorkspace ? [...activeWorkspace.slots] : [];
+    const slots = activeWorkspace ? [...activeWorkspace.slots] : [];
+    console.log('Geff: getSlots - returning', slots.length, 'slots');
+    return slots;
   }
 
   getSlot(slotIndex: number): Slot | null {
