@@ -1,4 +1,4 @@
-import { App, Plugin, TFile, Modal, Setting } from 'obsidian';
+import { App, Plugin, TFile, Modal, Setting, SuggestModal } from 'obsidian';
 import { DataManager } from './dataManager';
 import { WorkspaceManager } from './workspaceManager';
 import { SlotManager } from './slotManager';
@@ -9,6 +9,86 @@ import { SettingsTab } from '../ui/settingsTab';
 import { Notice } from '../ui/notice';
 // import { KeyboardUtils } from '../utils/keyboard';
 import { DEFAULT_HOTKEYS, SLOT_HOTKEYS } from '../utils/constants';
+import { Workspace } from '../types/workspace';
+
+interface WorkspaceSuggestion {
+  workspace: Workspace;
+  isActive: boolean;
+}
+
+class WorkspaceSelectionModal extends SuggestModal<WorkspaceSuggestion> {
+  private workspaces: Workspace[] = [];
+  private activeWorkspaceId: string | null = null;
+  private onSelect: (workspace: Workspace) => void;
+
+  constructor(
+    app: App,
+    workspaces: Workspace[],
+    activeWorkspaceId: string | null,
+    onSelect: (workspace: Workspace) => void
+  ) {
+    super(app);
+    this.workspaces = workspaces;
+    this.activeWorkspaceId = activeWorkspaceId;
+    this.onSelect = onSelect;
+    this.setPlaceholder('Select a workspace to switch to...');
+  }
+
+  getSuggestions(query: string): WorkspaceSuggestion[] {
+    return this.workspaces
+      .filter(workspace => 
+        workspace.name.toLowerCase().includes(query.toLowerCase()) &&
+        workspace.id !== this.activeWorkspaceId
+      )
+      .map(workspace => ({
+        workspace,
+        isActive: workspace.id === this.activeWorkspaceId
+      }));
+  }
+
+  renderSuggestion(suggestion: WorkspaceSuggestion, el: HTMLElement): void {
+    const { workspace, isActive } = suggestion;
+    
+    const container = el.createDiv({ cls: 'geff-workspace-suggestion' });
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.padding = '8px 12px';
+    container.style.gap = '12px';
+
+    // Workspace name
+    const nameEl = container.createSpan({ cls: 'geff-workspace-name' });
+    nameEl.textContent = workspace.name;
+    nameEl.style.fontWeight = '500';
+    
+    if (isActive) {
+      nameEl.style.color = 'var(--text-accent)';
+      nameEl.textContent += ' (Current)';
+    }
+
+    // Slot count
+    const slotCount = container.createSpan({ cls: 'geff-slot-count' });
+    slotCount.textContent = `[${workspace.slots.length} slots]`;
+    slotCount.style.fontSize = '0.8em';
+    slotCount.style.color = 'var(--text-muted)';
+    slotCount.style.marginLeft = 'auto';
+
+    // Hover effect
+    container.onmouseover = () => {
+      container.style.backgroundColor = 'var(--background-modifier-hover)';
+    };
+
+    container.onmouseout = () => {
+      container.style.backgroundColor = '';
+    };
+  }
+
+  async onChooseSuggestion(
+    suggestion: WorkspaceSuggestion,
+    _evt: MouseEvent | KeyboardEvent
+  ): Promise<void> {
+    this.onSelect(suggestion.workspace);
+  }
+}
 
 export class PluginManager {
   private dataManager!: DataManager;
@@ -83,9 +163,9 @@ export class PluginManager {
       // Validate slots on load
       await this.eventHandler.validateAllSlots();
 
-      console.log('Obsidian Geff plugin loaded successfully');
+      console.log('Geff plugin loaded successfully');
     } catch (error) {
-      console.error('Failed to load Obsidian Geff plugin:', error);
+      console.error('Failed to load Geff plugin:', error);
       this.notice.showError('Failed to load plugin');
     }
   }
@@ -99,9 +179,9 @@ export class PluginManager {
       // this.quickMenu?.destroy();
       this.statusBar?.unregister();
 
-      console.log('Obsidian Geff plugin unloaded successfully');
+      console.log('Geff plugin unloaded successfully');
     } catch (error) {
-      console.error('Error unloading Obsidian Geff plugin:', error);
+      console.error('Error unloading Geff plugin:', error);
     }
   }
 
@@ -138,9 +218,14 @@ export class PluginManager {
         callback: () => this.handleDeleteWorkspace(),
       },
       {
-        id: 'switch-workspace',
-        name: 'Switch Workspace',
+        id: 'select-workspace',
+        name: 'Select Workspace',
         callback: () => this.handleSwitchWorkspace(),
+      },
+      {
+        id: 'switch-workspace',
+        name: 'Switch to Next Workspace',
+        callback: () => this.handleSwitchToNextWorkspace(),
       },
       {
         id: 'export-workspace',
@@ -233,7 +318,8 @@ export class PluginManager {
       'create-workspace': 'Create Workspace',
       'rename-workspace': 'Rename Workspace',
       'delete-workspace': 'Delete Workspace',
-      'switch-workspace': 'Switch Workspace',
+      'select-workspace': 'Select Workspace',
+      'switch-workspace': 'Switch to Next Workspace',
       'export-workspace': 'Export Workspace',
       'import-workspace': 'Import Workspace',
     };
@@ -261,8 +347,11 @@ export class PluginManager {
         case 'delete-workspace':
           await this.handleDeleteWorkspace();
           break;
-        case 'switch-workspace':
+        case 'select-workspace':
           await this.handleSwitchWorkspace();
+          break;
+        case 'switch-workspace':
+          await this.handleSwitchToNextWorkspace();
           break;
         case 'export-workspace':
           await this.handleExportWorkspace();
@@ -380,6 +469,42 @@ export class PluginManager {
   }
 
   private async handleSwitchWorkspace(): Promise<void> {
+    try {
+      const workspaces = this.workspaceManager.getAllWorkspaces();
+      const activeWorkspace = this.workspaceManager.getActiveWorkspace();
+      
+      if (workspaces.length <= 1) {
+        this.notice.showError('No other workspaces available');
+        return;
+      }
+
+      // Show workspace selection modal
+      const modal = new WorkspaceSelectionModal(
+        this.app,
+        workspaces,
+        activeWorkspace?.id || null,
+        async (selectedWorkspace) => {
+          try {
+            await this.workspaceManager.switchWorkspace(selectedWorkspace.id);
+            this.notice.showSuccess(`Switched to workspace "${selectedWorkspace.name}"`);
+            this.statusBar.update();
+          } catch (error) {
+            this.notice.showError(
+              error instanceof Error ? error.message : String(error)
+            );
+          }
+        }
+      );
+      
+      modal.open();
+    } catch (error) {
+      this.notice.showError(
+        error instanceof Error ? error.message : String(error)
+      );
+    }
+  }
+
+  private async handleSwitchToNextWorkspace(): Promise<void> {
     try {
       const workspaces = this.workspaceManager.getAllWorkspaces();
       if (workspaces.length <= 1) {

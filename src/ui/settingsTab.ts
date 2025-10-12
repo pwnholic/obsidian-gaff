@@ -21,7 +21,7 @@ export class SettingsTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl('h2', { text: 'Obsidian Geff Settings' });
+    containerEl.createEl('h2', { text: 'Geff Settings' });
 
     // General Settings
     containerEl.createEl('h3', { text: 'General' });

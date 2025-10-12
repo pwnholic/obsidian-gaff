@@ -1,6 +1,6 @@
 {
 	"id": "obsidian-geff",
-	"name": "Obsidian Geff",
+	"name": "Geff",
 	"version": "1.0.0",
 	"minAppVersion": "1.5.0",
 	"description": "Quick navigation between notes using slots and workspaces, inspired by Harpoon",

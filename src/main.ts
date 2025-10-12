@@ -5,7 +5,7 @@ export default class ObsidianGaffPlugin extends Plugin {
   private pluginManager: PluginManager | null = null;
 
   async onload(): Promise<void> {
-    console.log('Loading Obsidian Geff plugin...');
+    console.log('Loading Geff plugin...');
 
     try {
       this.pluginManager = new PluginManager(this, this.app);
@@ -14,14 +14,14 @@ export default class ObsidianGaffPlugin extends Plugin {
       // Add some basic CSS for the plugin
       this.addStyles();
       
-      console.log('Obsidian Geff plugin loaded successfully');
+      console.log('Geff plugin loaded successfully');
     } catch (error) {
-      console.error('Failed to load Obsidian Geff plugin:', error);
+      console.error('Failed to load Geff plugin:', error);
     }
   }
 
   async onunload(): Promise<void> {
-    console.log('Unloading Obsidian Geff plugin...');
+    console.log('Unloading Geff plugin...');
 
     try {
       if (this.pluginManager) {
@@ -29,9 +29,9 @@ export default class ObsidianGaffPlugin extends Plugin {
         this.pluginManager = null;
       }
       
-      console.log('Obsidian Geff plugin unloaded successfully');
+      console.log('Geff plugin unloaded successfully');
     } catch (error) {
-      console.error('Error unloading Obsidian Geff plugin:', error);
+      console.error('Error unloading Geff plugin:', error);
     }
   }
 
@@ -97,6 +97,24 @@ export default class ObsidianGaffPlugin extends Plugin {
       .geff-workspace-indicator {
         font-weight: 500;
         color: var(--text-accent);
+      }
+      
+      /* Workspace Selection Modal */
+      .geff-workspace-suggestion {
+        transition: background-color 0.2s ease;
+      }
+      
+      .geff-workspace-suggestion.is-selected {
+        background-color: var(--background-modifier-hover);
+      }
+      
+      .geff-workspace-name {
+        flex: 1;
+      }
+      
+      .geff-slot-count {
+        opacity: 0.7;
+        font-size: 0.85em;
       }
     `;
     
