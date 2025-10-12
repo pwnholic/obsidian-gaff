@@ -1,4 +1,4 @@
-import { Workspace, Slot } from './workspace';
+import { Workspace } from './workspace';
 
 export interface GeffData {
   schemaVersion: number;

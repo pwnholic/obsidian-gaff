@@ -1,4 +1,4 @@
-import { App, Plugin, TFile, Modal, Setting, SuggestModal } from 'obsidian';
+import { App, Plugin, Modal, Setting, SuggestModal } from 'obsidian';
 import { DataManager } from './dataManager';
 import { WorkspaceManager } from './workspaceManager';
 import { SlotManager } from './slotManager';

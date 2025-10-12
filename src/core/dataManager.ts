@@ -1,5 +1,10 @@
 import { App, TFile } from 'obsidian';
-import { GeffData, GeffSettings, DEFAULT_SETTINGS } from '../types/geff';
+import {
+  GeffData,
+  GeffSettings,
+  DEFAULT_SETTINGS,
+  Workspace,
+} from '../types/geff';
 import { ValidationUtils } from '../utils/validation';
 import { BackupUtils } from '../utils/backup';
 import { SCHEMA_VERSION, DEFAULT_WORKSPACE_NAME } from '../utils/constants';
@@ -18,7 +23,7 @@ export class DataManager {
   async load(): Promise<void> {
     try {
       const dataFilePath = this.settings.dataPath;
-      console.log('Geff: Loading data from file:', dataFilePath);
+      console.log('Geff: Loading data from SINGLE file:', dataFilePath);
       const dataFile = this.app.vault.getAbstractFileByPath(dataFilePath);
 
       if (dataFile instanceof TFile) {
@@ -27,15 +32,22 @@ export class DataManager {
         console.log('Geff: Raw content length:', content.length);
 
         const parsedData = JSON.parse(content);
+        const totalSlots =
+          parsedData.workspaces?.reduce(
+            (sum: number, ws: Workspace) => sum + (ws.slots?.length || 0),
+            0
+          ) || 0;
         console.log(
-          'Geff: Parsed data, workspaces count:',
-          parsedData.workspaces?.length || 0
+          'Geff: Parsed data - workspaces:',
+          parsedData.workspaces?.length || 0,
+          'total slots:',
+          totalSlots
         );
 
         if (ValidationUtils.validateGeffData(parsedData)) {
           this.data = this.migrateDataIfNeeded(parsedData);
           console.log(
-            'Geff: Data loaded successfully, active workspace:',
+            'Geff: Data loaded successfully from single file, active workspace:',
             this.data.activeWorkspaceId
           );
         } else {
@@ -44,12 +56,15 @@ export class DataManager {
           await this.save();
         }
       } else {
-        console.log('Geff: No data file found, creating default data');
+        console.log(
+          'Geff: No data file found, creating default data in:',
+          dataFilePath
+        );
         this.data = this.createDefaultData();
         await this.save();
       }
     } catch (error) {
-      console.error('Geff: Failed to load data:', error);
+      console.error('Geff: Failed to load data from single file:', error);
       this.data = this.createDefaultData();
       await this.save();
     }
@@ -60,16 +75,28 @@ export class DataManager {
       this.data.updatedAt = new Date().toISOString();
       const dataFilePath = this.settings.dataPath;
 
+      if (!dataFilePath) {
+        throw new Error('Data file path is not configured');
+      }
+
       const content = JSON.stringify(this.data, null, 2);
 
-      // Debug logging
-      console.log('Geff: Saving data to file:', dataFilePath);
-      console.log(
-        'Geff: Data content preview:',
-        content.substring(0, 200) + '...'
+      // Count total slots across all workspaces for logging
+      const totalSlots = this.data.workspaces.reduce(
+        (sum: number, ws: Workspace) => sum + ws.slots.length,
+        0
       );
-      console.log('Geff: Workspaces to save:', this.data.workspaces.length);
+
+      // Debug logging
+      console.log('Geff: Saving data to SINGLE file:', dataFilePath);
+      console.log('Geff: Total workspaces:', this.data.workspaces.length);
+      console.log('Geff: Total slots across all workspaces:', totalSlots);
       console.log('Geff: Active workspace ID:', this.data.activeWorkspaceId);
+      console.log(
+        'Geff: Active workspace name:',
+        this.data.workspaces.find((w) => w.id === this.data.activeWorkspaceId)
+          ?.name || 'Unknown'
+      );
 
       // Use vault.adapter.write for more reliable file writing
       await this.app.vault.adapter.write(dataFilePath, content);
@@ -79,20 +106,28 @@ export class DataManager {
       if (verifyFile instanceof TFile) {
         const verifyContent = await this.app.vault.read(verifyFile);
         const verifyData = JSON.parse(verifyContent);
+        const verifyTotalSlots =
+          verifyData.workspaces?.reduce(
+            (sum: number, ws: Workspace) => sum + (ws.slots?.length || 0),
+            0
+          ) || 0;
         console.log(
-          'Geff: Verification - workspaces after save:',
-          verifyData.workspaces?.length || 0
+          'Geff: Verification successful - total slots after save:',
+          verifyTotalSlots
         );
       }
 
-      console.log('Geff: Data saved and verified successfully');
+      console.log(
+        'Geff: Data saved successfully to single file:',
+        dataFilePath
+      );
 
       if (this.settings.autoBackup) {
         await this.backupUtils.createBackup(this.data);
         await this.backupUtils.cleanupOldBackups();
       }
     } catch (error) {
-      console.error('Geff: Failed to save data:', error);
+      console.error('Geff: Failed to save data to single file:', error);
       throw new Error('Failed to save data');
     }
   }
@@ -114,7 +149,30 @@ export class DataManager {
   }
 
   setSettings(settings: Partial<GeffSettings>): void {
+    const oldDataPath = this.settings.dataPath;
+    const newDataPath = settings.dataPath;
+
     this.settings = { ...this.settings, ...settings };
+
+    // If data path changed, move existing data to new location
+    if (newDataPath && oldDataPath !== newDataPath) {
+      this.moveDataFile(oldDataPath, newDataPath);
+    }
+  }
+
+  private async moveDataFile(oldPath: string, newPath: string): Promise<void> {
+    try {
+      console.log('Geff: Moving data from', oldPath, 'to', newPath);
+
+      const oldFile = this.app.vault.getAbstractFileByPath(oldPath);
+      if (oldFile instanceof TFile) {
+        const content = await this.app.vault.read(oldFile);
+        await this.app.vault.adapter.write(newPath, content);
+        console.log('Geff: Data moved successfully to', newPath);
+      }
+    } catch (error) {
+      console.error('Geff: Failed to move data file:', error);
+    }
   }
 
   private createDefaultData(): GeffData {

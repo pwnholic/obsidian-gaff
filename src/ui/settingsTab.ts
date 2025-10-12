@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, TFile } from 'obsidian';
+import { App, PluginSettingTab, Setting } from 'obsidian';
 import { DataManager } from '../core/dataManager';
 import { GeffSettings } from '../types/geff';
 import { Notice as GaffNotice } from './notice';
