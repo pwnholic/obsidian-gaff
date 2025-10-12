@@ -1,6 +1,6 @@
 export const DEFAULT_SETTINGS = {
   autoRemoveMissing: true,
-  autoBackup: false,
+  autoBackup: true,
   dataPath: 'geff_data.json',
   uiTheme: 'default' as const,
   language: 'en' as const,

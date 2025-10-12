@@ -6,27 +6,31 @@ export class BackupUtils {
   constructor(private app: App) {}
 
   async createBackup(data: GeffData): Promise<string> {
-    const now = new Date();
-    const date = now.toISOString().slice(0, 10).replace(/-/g, '');
-    const time = now.toTimeString().slice(0, 8).replace(/:/g, '');
-    const backupFileName = `${BACKUP_PREFIX}${date}_${time}.json`;
+    const backupFileName = `${BACKUP_PREFIX}latest.json`;
+
+    // Add timestamp to the backup data for tracking when it was created
+    const backupData = {
+      ...data,
+      backupCreatedAt: new Date().toISOString(),
+      backupType: 'auto',
+    };
 
     try {
-      // Check if file already exists and modify name if needed
-      let finalFileName = backupFileName;
-      let counter = 1;
+      const backupContent = JSON.stringify(backupData, null, 2);
 
-      while (this.app.vault.getAbstractFileByPath(finalFileName)) {
-        finalFileName = `${BACKUP_PREFIX}${date}_${time}_${counter}.json`;
-        counter++;
+      const existingFile = this.app.vault.getAbstractFileByPath(backupFileName);
+
+      if (existingFile) {
+        // Overwrite existing backup file
+        await this.app.vault.modify(existingFile as TFile, backupContent);
+        console.log('Geff: Backup updated:', backupFileName);
+      } else {
+        // Create new backup file
+        await this.app.vault.create(backupFileName, backupContent);
+        console.log('Geff: Backup created:', backupFileName);
       }
 
-      const backupContent = JSON.stringify(data, null, 2);
-      const backupFile = await this.app.vault.create(
-        finalFileName,
-        backupContent
-      );
-      return backupFile.path;
+      return backupFileName;
     } catch (error) {
       console.error('Failed to create backup:', error);
       // Don't fail the entire operation if backup fails
@@ -60,22 +64,9 @@ export class BackupUtils {
   }
 
   async cleanupOldBackups(keepCount: number = 10): Promise<void> {
-    const backupFiles = await this.getBackupFiles();
-
-    if (backupFiles.length <= keepCount) return;
-
-    // Sort by modification time (newest first)
-    backupFiles.sort((a, b) => b.stat.mtime - a.stat.mtime);
-
-    // Delete oldest backups
-    const filesToDelete = backupFiles.slice(keepCount);
-    for (const file of filesToDelete) {
-      try {
-        await this.app.vault.delete(file);
-      } catch (error) {
-        console.error(`Failed to delete backup file ${file.path}:`, error);
-      }
-    }
+    // With single backup file approach, no cleanup needed
+    // Keeping this method for compatibility but it's now a no-op
+    console.log('Geff: Single backup file mode - no cleanup needed');
   }
 
   async hasValidDataFile(dataFilePath: string): Promise<boolean> {

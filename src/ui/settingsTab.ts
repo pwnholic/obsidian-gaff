@@ -39,7 +39,9 @@ export class SettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Auto-backup')
-      .setDesc('Create automatic backups when data changes')
+      .setDesc(
+        'Create automatic backup to single file (geff_backup_latest.json) when data changes'
+      )
       .addToggle((toggle) =>
         toggle
           .setValue(this.dataManager.getSettings().autoBackup)
