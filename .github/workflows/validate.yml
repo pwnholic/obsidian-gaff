@@ -1,0 +1,78 @@
+name: Validate Plugin
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    name: Validate Plugin
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Validate manifest.json
+      run: |
+        # Check if manifest.json exists and is valid JSON
+        if [ ! -f "manifest.json" ]; then
+          echo "manifest.json not found"
+          exit 1
+        fi
+        
+        # Validate JSON structure
+        jq empty manifest.json
+        
+        # Check required fields
+        required_fields=("id" "name" "version" "minAppVersion" "description")
+        for field in "${required_fields[@]}"; do
+          if ! jq -e ".$field" manifest.json > /dev/null; then
+            echo "Required field '$field' missing from manifest.json"
+            exit 1
+          fi
+        done
+        
+        # Validate version format
+        if ! jq -e '.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")' manifest.json > /dev/null; then
+          echo "Version must be in format x.y.z"
+          exit 1
+        fi
+        
+        echo "manifest.json validation passed"
+        
+    - name: Validate main.js exists
+      run: |
+        if [ ! -f "main.js" ]; then
+          echo "main.js not found. Run 'npm run build' first."
+          exit 1
+        fi
+        echo "main.js validation passed"
+        
+    - name: Check for common issues
+      run: |
+        # Check for console.log statements (should be removed in production)
+        if grep -r "console\.log" src/ --exclude-dir=node_modules; then
+          echo "Warning: console.log statements found in source code"
+        fi
+        
+        # Check for TODO comments
+        if grep -r "TODO\|FIXME" src/ --exclude-dir=node_modules; then
+          echo "Warning: TODO/FIXME comments found in source code"
+        fi
+        
+        # Check for hardcoded secrets
+        if grep -r -i "password\|secret\|token\|api_key" src/ --exclude-dir=node_modules; then
+          echo "Warning: Potential hardcoded secrets found"
+        fi
