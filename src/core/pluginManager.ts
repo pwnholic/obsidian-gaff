@@ -36,19 +36,20 @@ class WorkspaceSelectionModal extends SuggestModal<WorkspaceSuggestion> {
 
   getSuggestions(query: string): WorkspaceSuggestion[] {
     return this.workspaces
-      .filter(workspace => 
-        workspace.name.toLowerCase().includes(query.toLowerCase()) &&
-        workspace.id !== this.activeWorkspaceId
+      .filter(
+        (workspace) =>
+          workspace.name.toLowerCase().includes(query.toLowerCase()) &&
+          workspace.id !== this.activeWorkspaceId
       )
-      .map(workspace => ({
+      .map((workspace) => ({
         workspace,
-        isActive: workspace.id === this.activeWorkspaceId
+        isActive: workspace.id === this.activeWorkspaceId,
       }));
   }
 
   renderSuggestion(suggestion: WorkspaceSuggestion, el: HTMLElement): void {
     const { workspace, isActive } = suggestion;
-    
+
     const container = el.createDiv({ cls: 'geff-workspace-suggestion' });
     container.style.display = 'flex';
     container.style.alignItems = 'center';
@@ -59,7 +60,7 @@ class WorkspaceSelectionModal extends SuggestModal<WorkspaceSuggestion> {
     const nameEl = container.createSpan({ cls: 'geff-workspace-name' });
     nameEl.textContent = workspace.name;
     nameEl.style.fontWeight = '500';
-    
+
     if (isActive) {
       nameEl.style.color = 'var(--text-accent)';
       nameEl.textContent += ' (Current)';
@@ -172,6 +173,10 @@ export class PluginManager {
 
   async onunload(): Promise<void> {
     try {
+      // Save data before unloading
+      console.log('Geff: Saving data before plugin unload...');
+      await this.dataManager.save();
+
       // Unregister event handlers
       this.eventHandler.unregisterEventHandlers();
 
@@ -241,6 +246,11 @@ export class PluginManager {
         id: 'undo-last-action',
         name: 'Undo Last Action',
         callback: () => this.handleUndoLastAction(),
+      },
+      {
+        id: 'save-data',
+        name: 'Save Data',
+        callback: () => this.handleSaveData(),
       },
     ];
 
@@ -322,6 +332,7 @@ export class PluginManager {
       'switch-workspace': 'Switch to Next Workspace',
       'export-workspace': 'Export Workspace',
       'import-workspace': 'Import Workspace',
+      'save-data': 'Save Data',
     };
     return names[commandId] || commandId;
   }
@@ -361,6 +372,9 @@ export class PluginManager {
           break;
         case 'undo-last-action':
           await this.handleUndoLastAction();
+          break;
+        case 'save-data':
+          await this.handleSaveData();
           break;
       }
     } catch (error) {
@@ -472,7 +486,7 @@ export class PluginManager {
     try {
       const workspaces = this.workspaceManager.getAllWorkspaces();
       const activeWorkspace = this.workspaceManager.getActiveWorkspace();
-      
+
       if (workspaces.length <= 1) {
         this.notice.showError('No other workspaces available');
         return;
@@ -486,7 +500,9 @@ export class PluginManager {
         async (selectedWorkspace) => {
           try {
             await this.workspaceManager.switchWorkspace(selectedWorkspace.id);
-            this.notice.showSuccess(`Switched to workspace "${selectedWorkspace.name}"`);
+            this.notice.showSuccess(
+              `Switched to workspace "${selectedWorkspace.name}"`
+            );
             this.statusBar.update();
           } catch (error) {
             this.notice.showError(
@@ -495,7 +511,7 @@ export class PluginManager {
           }
         }
       );
-      
+
       modal.open();
     } catch (error) {
       this.notice.showError(
@@ -601,6 +617,17 @@ export class PluginManager {
     }
   }
 
+  private async handleSaveData(): Promise<void> {
+    try {
+      await this.dataManager.save();
+      this.notice.showSuccess('Data saved manually');
+    } catch (error) {
+      this.notice.showError(
+        error instanceof Error ? error.message : String(error)
+      );
+    }
+  }
+
   private async promptForInput(
     message: string,
     defaultValue: string = ''
@@ -626,15 +653,13 @@ export class PluginManager {
               this.input.select();
             })
             .addButton((btn) =>
-              btn
-                .setButtonText('Cancel')
-                .onClick(() => {
-                  if (!this.resolved) {
-                    this.resolved = true;
-                    resolve('');
-                    this.close();
-                  }
-                })
+              btn.setButtonText('Cancel').onClick(() => {
+                if (!this.resolved) {
+                  this.resolved = true;
+                  resolve('');
+                  this.close();
+                }
+              })
             )
             .addButton((btn) =>
               btn

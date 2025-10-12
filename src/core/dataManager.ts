@@ -21,25 +21,38 @@ export class DataManager {
 
   async load(): Promise<void> {
     try {
+      console.log('Geff: Loading data from file:', DATA_FILE);
       const dataFile = this.app.vault.getAbstractFileByPath(DATA_FILE);
 
       if (dataFile instanceof TFile) {
+        console.log('Geff: Data file found, reading content...');
         const content = await this.app.vault.read(dataFile);
+        console.log('Geff: Raw content length:', content.length);
+
         const parsedData = JSON.parse(content);
+        console.log(
+          'Geff: Parsed data, workspaces count:',
+          parsedData.workspaces?.length || 0
+        );
 
         if (ValidationUtils.validateGeffData(parsedData)) {
           this.data = this.migrateDataIfNeeded(parsedData);
+          console.log(
+            'Geff: Data loaded successfully, active workspace:',
+            this.data.activeWorkspaceId
+          );
         } else {
-          console.warn('Invalid data format, creating default data');
+          console.warn('Geff: Invalid data format, creating default data');
           this.data = this.createDefaultData();
           await this.save();
         }
       } else {
+        console.log('Geff: No data file found, creating default data');
         this.data = this.createDefaultData();
         await this.save();
       }
     } catch (error) {
-      console.error('Failed to load data:', error);
+      console.error('Geff: Failed to load data:', error);
       this.data = this.createDefaultData();
       await this.save();
     }
@@ -50,14 +63,38 @@ export class DataManager {
       this.data.updatedAt = new Date().toISOString();
 
       const content = JSON.stringify(this.data, null, 2);
+
+      // Debug logging
+      console.log('Geff: Saving data to file:', DATA_FILE);
+      console.log(
+        'Geff: Data content preview:',
+        content.substring(0, 200) + '...'
+      );
+      console.log('Geff: Workspaces to save:', this.data.workspaces.length);
+      console.log('Geff: Active workspace ID:', this.data.activeWorkspaceId);
+
+      // Use vault.adapter.write for more reliable file writing
       await this.app.vault.adapter.write(DATA_FILE, content);
+
+      // Verify the file was written correctly
+      const verifyFile = this.app.vault.getAbstractFileByPath(DATA_FILE);
+      if (verifyFile instanceof TFile) {
+        const verifyContent = await this.app.vault.read(verifyFile);
+        const verifyData = JSON.parse(verifyContent);
+        console.log(
+          'Geff: Verification - workspaces after save:',
+          verifyData.workspaces?.length || 0
+        );
+      }
+
+      console.log('Geff: Data saved and verified successfully');
 
       if (this.settings.autoBackup) {
         await this.backupUtils.createBackup(this.data);
         await this.backupUtils.cleanupOldBackups();
       }
     } catch (error) {
-      console.error('Failed to save data:', error);
+      console.error('Geff: Failed to save data:', error);
       throw new Error('Failed to save data');
     }
   }
