@@ -6,6 +6,7 @@ import { DEFAULT_SETTINGS } from '../utils/constants';
 
 export class SettingsTab extends PluginSettingTab {
   private notice: GaffNotice;
+  private plugin: any;
 
   constructor(
     app: App,
@@ -14,6 +15,7 @@ export class SettingsTab extends PluginSettingTab {
     notice: GaffNotice
   ) {
     super(app, plugin);
+    this.plugin = plugin;
     this.notice = notice;
   }
 
@@ -199,6 +201,7 @@ export class SettingsTab extends PluginSettingTab {
   ): Promise<void> {
     try {
       this.dataManager.setSettings({ [key]: value });
+      await this.dataManager.saveSettingsToPluginData(this.plugin);
       this.notice.showSuccess('Setting updated');
     } catch {
       this.notice.showError('Failed to update setting');

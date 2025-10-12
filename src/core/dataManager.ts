@@ -20,6 +20,13 @@ export class DataManager {
     this.data = this.createDefaultData();
   }
 
+  initializeSettings(settings?: Partial<GeffSettings>): void {
+    if (settings) {
+      this.settings = { ...DEFAULT_SETTINGS, ...settings };
+      console.log('Geff: Settings initialized with custom values');
+    }
+  }
+
   async load(): Promise<void> {
     try {
       const dataFilePath = this.settings.dataPath;
@@ -80,6 +87,13 @@ export class DataManager {
       }
 
       const content = JSON.stringify(this.data, null, 2);
+
+      // Ensure directory exists before writing
+      const dirPath = dataFilePath.substring(0, dataFilePath.lastIndexOf('/'));
+      if (dirPath && !this.app.vault.getAbstractFileByPath(dirPath)) {
+        console.log('Geff: Creating directory:', dirPath);
+        await this.app.vault.createFolder(dirPath);
+      }
 
       // Count total slots across all workspaces for logging
       const totalSlots = this.data.workspaces.reduce(
@@ -157,6 +171,18 @@ export class DataManager {
     // If data path changed, move existing data to new location
     if (newDataPath && oldDataPath !== newDataPath) {
       this.moveDataFile(oldDataPath, newDataPath);
+    }
+  }
+
+  async saveSettingsToPluginData(plugin: any): Promise<void> {
+    try {
+      await plugin.saveData({
+        settings: this.settings,
+        data: this.data,
+      });
+      console.log('Geff: Settings saved to plugin data');
+    } catch (error) {
+      console.error('Geff: Failed to save settings to plugin data:', error);
     }
   }
 

@@ -112,6 +112,11 @@ export class PluginManager {
     try {
       // Initialize core managers
       this.dataManager = new DataManager(this.app);
+
+      // Initialize settings from plugin data
+      const pluginData = await this.plugin.loadData();
+      this.dataManager.initializeSettings(pluginData?.settings);
+
       this.workspaceManager = new WorkspaceManager(this.app, this.dataManager);
       this.slotManager = new SlotManager(
         this.app,
