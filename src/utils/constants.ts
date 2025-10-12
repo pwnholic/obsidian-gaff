@@ -18,7 +18,6 @@ export const DEFAULT_HOTKEYS = {
   'remove-note': 'Ctrl+Shift+R',
   'open-quick-menu': 'Ctrl+E',
   'create-workspace': 'Ctrl+Shift+N',
-  'switch-workspace': 'Ctrl+Shift+S',
   'rename-workspace': 'Ctrl+Shift+M',
   'delete-workspace': 'Ctrl+Shift+D',
   'export-workspace': 'Ctrl+Shift+X',

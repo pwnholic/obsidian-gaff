@@ -232,11 +232,6 @@ export class PluginManager {
         name: 'Select Workspace',
         callback: () => this.handleSwitchWorkspace(),
       },
-      {
-        id: 'switch-workspace',
-        name: 'Switch to Next Workspace',
-        callback: () => this.handleSwitchToNextWorkspace(),
-      },
     ];
 
     // Add slot navigation commands
@@ -342,9 +337,6 @@ export class PluginManager {
           break;
         case 'select-workspace':
           await this.handleSwitchWorkspace();
-          break;
-        case 'switch-workspace':
-          await this.handleSwitchToNextWorkspace();
           break;
       }
     } catch (error) {
@@ -483,32 +475,6 @@ export class PluginManager {
       );
 
       modal.open();
-    } catch (error) {
-      this.notice.showError(
-        error instanceof Error ? error.message : String(error)
-      );
-    }
-  }
-
-  private async handleSwitchToNextWorkspace(): Promise<void> {
-    try {
-      const workspaces = this.workspaceManager.getAllWorkspaces();
-      if (workspaces.length <= 1) {
-        this.notice.showError('No other workspaces available');
-        return;
-      }
-
-      // Simple implementation - switch to next workspace
-      const activeWorkspace = this.workspaceManager.getActiveWorkspace();
-      const currentIndex = workspaces.findIndex(
-        (w) => w.id === activeWorkspace?.id
-      );
-      const nextIndex = (currentIndex + 1) % workspaces.length;
-      const nextWorkspace = workspaces[nextIndex];
-
-      await this.workspaceManager.switchWorkspace(nextWorkspace.id);
-      this.notice.showSuccess(`Switched to workspace "${nextWorkspace.name}"`);
-      this.statusBar.update();
     } catch (error) {
       this.notice.showError(
         error instanceof Error ? error.message : String(error)

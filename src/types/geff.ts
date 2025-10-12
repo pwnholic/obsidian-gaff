@@ -31,7 +31,7 @@ export type CommandId =
   | 'create-workspace'
   | 'rename-workspace'
   | 'delete-workspace'
-  | 'switch-workspace'
+  | 'select-workspace'
   | 'export-workspace'
   | 'import-workspace';
 
