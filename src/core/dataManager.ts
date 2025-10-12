@@ -17,7 +17,16 @@ export class DataManager {
   constructor(private app: App) {
     this.backupUtils = new BackupUtils(app);
     this.settings = { ...DEFAULT_SETTINGS };
-    this.data = this.createDefaultData();
+    // Start with empty data - will be loaded in load() method
+    this.data = this.createEmptyData();
+  }
+
+  private createEmptyData(): GeffData {
+    return {
+      schemaVersion: SCHEMA_VERSION,
+      activeWorkspaceId: '',
+      workspaces: [],
+    };
   }
 
   initializeSettings(settings?: Partial<GeffSettings>): void {
@@ -31,6 +40,11 @@ export class DataManager {
     try {
       const dataFilePath = this.settings.dataPath;
       console.log('Geff: Loading data from SINGLE file:', dataFilePath);
+      console.log(
+        'Geff: Current data before load - workspaces:',
+        this.data.workspaces.length
+      );
+
       const dataFile = this.app.vault.getAbstractFileByPath(dataFilePath);
 
       if (dataFile instanceof TFile) {
@@ -56,6 +70,16 @@ export class DataManager {
           console.log(
             'Geff: Data loaded successfully from single file, active workspace:',
             this.data.activeWorkspaceId
+          );
+          console.log(
+            'Geff: After load - workspaces:',
+            this.data.workspaces.length
+          );
+          console.log(
+            'Geff: After load - slots in active workspace:',
+            this.data.workspaces.find(
+              (w) => w.id === this.data.activeWorkspaceId
+            )?.slots?.length || 0
           );
         } else {
           console.warn('Geff: Invalid data format, creating default data');
@@ -152,8 +176,10 @@ export class DataManager {
       );
 
       if (this.settings.autoBackup) {
+        console.log('Geff: Starting backup process...');
         await this.backupUtils.createBackup(this.data, dataFilePath);
         await this.backupUtils.cleanupOldBackups();
+        console.log('Geff: Backup process completed');
       }
     } catch (error) {
       console.error('Geff: Failed to save data to single file:', error);

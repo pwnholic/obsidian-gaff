@@ -48,6 +48,9 @@ export class BackupUtils {
 
       if (!(existingFile instanceof TFile)) {
         // File doesn't exist, consider this as a change
+        console.log(
+          'Geff: hasDataChanged - file does not exist, assuming changes'
+        );
         return true;
       }
 
@@ -59,11 +62,24 @@ export class BackupUtils {
         existingData;
       const cleanNewData = { ...newData };
 
+      // Log slot counts for debugging
+      console.log(
+        'Geff: hasDataChanged - existing slots:',
+        cleanExistingData.workspaces[0]?.slots?.length || 0
+      );
+      console.log(
+        'Geff: hasDataChanged - new slots:',
+        cleanNewData.workspaces[0]?.slots?.length || 0
+      );
+
       // Compare the actual data (excluding backup metadata)
       const existingJson = JSON.stringify(cleanExistingData, null, 2);
       const newJson = JSON.stringify(cleanNewData, null, 2);
 
-      return existingJson !== newJson;
+      const hasChanged = existingJson !== newJson;
+      console.log('Geff: hasDataChanged - result:', hasChanged);
+
+      return hasChanged;
     } catch (error) {
       // If we can't read the existing file, assume there are changes
       console.warn(
