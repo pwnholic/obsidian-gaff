@@ -32,10 +32,19 @@ class WorkspaceSelectionModal extends SuggestModal<WorkspaceSuggestion> {
     this.activeWorkspaceId = activeWorkspaceId;
     this.onSelect = onSelect;
     this.setPlaceholder('Select a workspace to switch to...');
+
+    console.log(
+      'Geff: WorkspaceSelectionModal constructor received workspaces:',
+      workspaces.length
+    );
+    console.log(
+      'Geff: WorkspaceSelectionModal workspaces:',
+      workspaces.map((w) => ({ name: w.name, id: w.id, slots: w.slots.length }))
+    );
   }
 
   getSuggestions(query: string): WorkspaceSuggestion[] {
-    return this.workspaces
+    const filtered = this.workspaces
       .filter(
         (workspace) =>
           workspace.name.toLowerCase().includes(query.toLowerCase()) &&
@@ -45,6 +54,23 @@ class WorkspaceSelectionModal extends SuggestModal<WorkspaceSuggestion> {
         workspace,
         isActive: workspace.id === this.activeWorkspaceId,
       }));
+
+    console.log(
+      'Geff: getSuggestions - total workspaces:',
+      this.workspaces.length
+    );
+    console.log(
+      'Geff: getSuggestions - activeWorkspaceId:',
+      this.activeWorkspaceId
+    );
+    console.log('Geff: getSuggestions - query:', query);
+    console.log('Geff: getSuggestions - filtered results:', filtered.length);
+    console.log(
+      'Geff: getSuggestions - filtered workspaces:',
+      filtered.map((f) => f.workspace.name)
+    );
+
+    return filtered;
   }
 
   renderSuggestion(suggestion: WorkspaceSuggestion, el: HTMLElement): void {
@@ -465,6 +491,19 @@ export class PluginManager {
       }
 
       // Show workspace selection modal
+      console.log(
+        'Geff: Creating WorkspaceSelectionModal with workspaces:',
+        workspaces.length
+      );
+      console.log(
+        'Geff: Workspaces being sent to modal:',
+        workspaces.map((w) => ({
+          name: w.name,
+          id: w.id,
+          slots: w.slots.length,
+        }))
+      );
+
       const modal = new WorkspaceSelectionModal(
         this.app,
         workspaces,
