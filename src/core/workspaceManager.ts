@@ -131,47 +131,6 @@ export class WorkspaceManager {
     return data.workspaces.find((w) => w.id === workspaceId) || null;
   }
 
-  async exportWorkspace(workspaceId: string): Promise<string> {
-    const workspace = this.getWorkspaceById(workspaceId);
-
-    if (!workspace) {
-      throw new Error('Workspace not found');
-    }
-
-    return JSON.stringify(workspace, null, 2);
-  }
-
-  async importWorkspace(jsonContent: string): Promise<Workspace> {
-    try {
-      const importedWorkspace = JSON.parse(jsonContent);
-
-      if (!ValidationUtils.validateWorkspace(importedWorkspace)) {
-        throw new Error('Invalid workspace format');
-      }
-
-      // Generate new ID to avoid conflicts
-      importedWorkspace.id = ValidationUtils.generateId();
-      importedWorkspace.createdAt = new Date().toISOString();
-      importedWorkspace.updatedAt = new Date().toISOString();
-
-      const data = this.dataManager.getData();
-
-      // Check for duplicate names
-      if (data.workspaces.some((w) => w.name === importedWorkspace.name)) {
-        importedWorkspace.name = `${importedWorkspace.name} (Imported)`;
-      }
-
-      data.workspaces.push(importedWorkspace);
-      this.dataManager.setData(data);
-      await this.dataManager.save();
-
-      return importedWorkspace;
-    } catch (error) {
-      console.error('Failed to import workspace:', error);
-      throw new Error('Failed to import workspace');
-    }
-  }
-
   async validateWorkspaceFiles(workspaceId: string): Promise<string[]> {
     const workspace = this.getWorkspaceById(workspaceId);
 

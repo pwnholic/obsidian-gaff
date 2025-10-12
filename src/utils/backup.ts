@@ -1,6 +1,6 @@
 import { App, TFile } from 'obsidian';
 import { GeffData } from '../types/geff';
-import { BACKUP_PREFIX, DATA_FILE } from './constants';
+import { BACKUP_PREFIX } from './constants';
 
 export class BackupUtils {
   constructor(private app: App) {}
@@ -15,7 +15,7 @@ export class BackupUtils {
       // Check if file already exists and modify name if needed
       let finalFileName = backupFileName;
       let counter = 1;
-      
+
       while (this.app.vault.getAbstractFileByPath(finalFileName)) {
         finalFileName = `${BACKUP_PREFIX}${date}_${time}_${counter}.json`;
         counter++;
@@ -78,8 +78,8 @@ export class BackupUtils {
     }
   }
 
-  async hasValidDataFile(): Promise<boolean> {
-    const dataFile = this.app.vault.getAbstractFileByPath(DATA_FILE);
+  async hasValidDataFile(dataFilePath: string): Promise<boolean> {
+    const dataFile = this.app.vault.getAbstractFileByPath(dataFilePath);
     return dataFile instanceof TFile;
   }
 }

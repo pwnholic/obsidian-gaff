@@ -1,12 +1,10 @@
 import { App, TFile } from 'obsidian';
-import { Slot, SlotAction } from '../types/geff';
+import { Slot } from '../types/geff';
 import { ValidationUtils } from '../utils/validation';
 import { DataManager } from './dataManager';
 import { WorkspaceManager } from './workspaceManager';
 
 export class SlotManager {
-  private lastAction: SlotAction | null = null;
-
   constructor(
     private app: App,
     private dataManager: DataManager,
@@ -60,13 +58,6 @@ export class SlotManager {
       throw new Error('Workspace not found');
     }
 
-    // Store action for undo
-    this.lastAction = {
-      type: 'add',
-      slot: newSlot,
-      timestamp: Date.now(),
-    };
-
     if (slotIndex !== undefined) {
       // Insert at specific index
       if (slotIndex >= workspace.slots.length) {
@@ -114,13 +105,6 @@ export class SlotManager {
 
     const removedSlot = workspace.slots[slotIndex];
 
-    // Store action for undo
-    this.lastAction = {
-      type: 'remove',
-      slot: removedSlot,
-      timestamp: Date.now(),
-    };
-
     workspace.slots.splice(slotIndex, 1);
     workspace.updatedAt = new Date().toISOString();
 
@@ -154,43 +138,6 @@ export class SlotManager {
 
     await this.app.workspace.getLeaf().openFile(file);
     return file;
-  }
-
-  async undoLastAction(): Promise<void> {
-    if (!this.lastAction) {
-      throw new Error('No action to undo');
-    }
-
-    const activeWorkspace = this.workspaceManager.getActiveWorkspace();
-    if (!activeWorkspace) {
-      throw new Error('No active workspace');
-    }
-
-    const data = this.dataManager.getData();
-    const workspace = data.workspaces.find((w) => w.id === activeWorkspace.id);
-
-    if (!workspace) {
-      throw new Error('Workspace not found');
-    }
-
-    if (this.lastAction.type === 'add') {
-      // Remove the added slot
-      const slotIndex = workspace.slots.findIndex(
-        (s) => s.id === this.lastAction!.slot.id
-      );
-      if (slotIndex !== -1) {
-        workspace.slots.splice(slotIndex, 1);
-      }
-    } else if (this.lastAction.type === 'remove') {
-      // Add back the removed slot
-      workspace.slots.push(this.lastAction.slot);
-    }
-
-    workspace.updatedAt = new Date().toISOString();
-    this.dataManager.setData(data);
-    await this.dataManager.save();
-
-    this.lastAction = null;
   }
 
   getSlots(): Slot[] {
@@ -284,13 +231,5 @@ export class SlotManager {
     await this.dataManager.save();
 
     return missingSlots;
-  }
-
-  hasUndoAction(): boolean {
-    return this.lastAction !== null;
-  }
-
-  getLastAction(): SlotAction | null {
-    return this.lastAction;
   }
 }

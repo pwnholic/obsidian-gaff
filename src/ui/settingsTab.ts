@@ -131,37 +131,8 @@ export class SettingsTab extends PluginSettingTab {
           })
       );
 
-    new Setting(containerEl)
-      .setName('Export data')
-      .setDesc('Export all plugin data to a JSON file')
-      .addButton((button) =>
-        button.setButtonText('Export').onClick(async () => {
-          await this.exportData();
-        })
-      );
-
-    new Setting(containerEl)
-      .setName('Import data')
-      .setDesc('Import plugin data from a JSON file')
-      .addButton((button) =>
-        button.setButtonText('Import').onClick(async () => {
-          await this.importData();
-        })
-      );
-
     // Advanced Settings
     containerEl.createEl('h3', { text: 'Advanced' });
-
-    new Setting(containerEl)
-      .setName('Telemetry')
-      .setDesc('Share anonymous usage data to help improve the plugin')
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.dataManager.getSettings().telemetry)
-          .onChange(async (value) => {
-            await this.updateSetting('telemetry', value);
-          })
-      );
 
     // Reset Section
     containerEl.createEl('h3', { text: 'Reset' });
@@ -227,48 +198,6 @@ export class SettingsTab extends PluginSettingTab {
       this.notice.showSuccess('Setting updated');
     } catch {
       this.notice.showError('Failed to update setting');
-    }
-  }
-
-  private async exportData(): Promise<void> {
-    try {
-      const data = await this.dataManager.exportData();
-      const fileName = `geff_export_${new Date().toISOString().slice(0, 10)}.json`;
-      await this.app.vault.create(fileName, data);
-      this.notice.showSuccess(`Data exported to ${fileName}`);
-    } catch {
-      this.notice.showError('Failed to export data');
-    }
-  }
-
-  private async importData(): Promise<void> {
-    try {
-      const files = this.app.vault
-        .getFiles()
-        .filter((file) => file.name.endsWith('.json'))
-        .map((file) => file.path);
-
-      if (files.length === 0) {
-        this.notice.showError('No JSON files found');
-        return;
-      }
-
-      // Simple implementation - use first JSON file
-      // In a real implementation, you'd show a file picker
-      const selectedFile = files[0];
-      const file = this.app.vault.getAbstractFileByPath(selectedFile);
-
-      if (!(file instanceof TFile)) {
-        this.notice.showError('Invalid file selected');
-        return;
-      }
-
-      const content = await this.app.vault.read(file);
-      await this.dataManager.importData(content);
-      this.notice.showSuccess('Data imported successfully');
-      this.display(); // Refresh settings display
-    } catch {
-      this.notice.showError('Failed to import data');
     }
   }
 

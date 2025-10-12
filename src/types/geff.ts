@@ -16,7 +16,6 @@ export interface GeffSettings {
   maxSlots: number;
   notifications: boolean;
   confirmDelete: boolean;
-  telemetry: boolean;
 }
 
 export interface GeffPluginData {
@@ -43,12 +42,6 @@ export interface HotkeyMapping {
 // Re-export types from workspace for convenience
 export type { Slot, Workspace } from './workspace';
 
-export interface SlotAction {
-  type: 'add' | 'remove';
-  slot: Slot;
-  timestamp: number;
-}
-
 export const DEFAULT_SETTINGS: GeffSettings = {
   autoRemoveMissing: true,
   autoBackup: true,
@@ -58,5 +51,4 @@ export const DEFAULT_SETTINGS: GeffSettings = {
   maxSlots: 9,
   notifications: true,
   confirmDelete: true,
-  telemetry: false,
 };

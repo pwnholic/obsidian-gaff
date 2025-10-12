@@ -232,26 +232,6 @@ export class PluginManager {
         name: 'Switch to Next Workspace',
         callback: () => this.handleSwitchToNextWorkspace(),
       },
-      {
-        id: 'export-workspace',
-        name: 'Export Workspace',
-        callback: () => this.handleExportWorkspace(),
-      },
-      {
-        id: 'import-workspace',
-        name: 'Import Workspace',
-        callback: () => this.handleImportWorkspace(),
-      },
-      {
-        id: 'undo-last-action',
-        name: 'Undo Last Action',
-        callback: () => this.handleUndoLastAction(),
-      },
-      {
-        id: 'save-data',
-        name: 'Save Data',
-        callback: () => this.handleSaveData(),
-      },
     ];
 
     // Add slot navigation commands
@@ -330,9 +310,6 @@ export class PluginManager {
       'delete-workspace': 'Delete Workspace',
       'select-workspace': 'Select Workspace',
       'switch-workspace': 'Switch to Next Workspace',
-      'export-workspace': 'Export Workspace',
-      'import-workspace': 'Import Workspace',
-      'save-data': 'Save Data',
     };
     return names[commandId] || commandId;
   }
@@ -363,18 +340,6 @@ export class PluginManager {
           break;
         case 'switch-workspace':
           await this.handleSwitchToNextWorkspace();
-          break;
-        case 'export-workspace':
-          await this.handleExportWorkspace();
-          break;
-        case 'import-workspace':
-          await this.handleImportWorkspace();
-          break;
-        case 'undo-last-action':
-          await this.handleUndoLastAction();
-          break;
-        case 'save-data':
-          await this.handleSaveData();
           break;
       }
     } catch (error) {
@@ -546,81 +511,9 @@ export class PluginManager {
     }
   }
 
-  private async handleExportWorkspace(): Promise<void> {
-    try {
-      const activeWorkspace = this.workspaceManager.getActiveWorkspace();
-      if (!activeWorkspace) {
-        this.notice.showError('No active workspace');
-        return;
-      }
-
-      const exportData = await this.workspaceManager.exportWorkspace(
-        activeWorkspace.id
-      );
-
-      // Create file in vault
-      const fileName = `${activeWorkspace.name.replace(/[^a-zA-Z0-9]/g, '_')}_export.json`;
-      await this.app.vault.create(fileName, exportData);
-
-      this.notice.showSuccess(`Workspace exported to ${fileName}`);
-    } catch (error) {
-      this.notice.showError(
-        error instanceof Error ? error.message : String(error)
-      );
-    }
-  }
-
-  private async handleImportWorkspace(): Promise<void> {
-    try {
-      // Simple implementation - prompt for file path
-      const filePath = await this.promptForInput(
-        'Enter path to workspace export file:'
-      );
-      if (!filePath) return;
-
-      const file = this.app.vault.getAbstractFileByPath(filePath);
-      if (!(file instanceof TFile)) {
-        this.notice.showError('File not found');
-        return;
-      }
-
-      const content = await this.app.vault.read(file);
-      const workspace = await this.workspaceManager.importWorkspace(content);
-
-      this.notice.showSuccess(`Workspace "${workspace.name}" imported`);
-    } catch (error) {
-      this.notice.showError(
-        error instanceof Error ? error.message : String(error)
-      );
-    }
-  }
-
   private async handleGotoSlot(slotIndex: number): Promise<void> {
     try {
       await this.slotManager.gotoSlot(slotIndex);
-    } catch (error) {
-      this.notice.showError(
-        error instanceof Error ? error.message : String(error)
-      );
-    }
-  }
-
-  private async handleUndoLastAction(): Promise<void> {
-    try {
-      await this.slotManager.undoLastAction();
-      this.notice.showSuccess('Action undone');
-      this.statusBar.update();
-    } catch (error) {
-      this.notice.showError(
-        error instanceof Error ? error.message : String(error)
-      );
-    }
-  }
-
-  private async handleSaveData(): Promise<void> {
-    try {
-      await this.dataManager.save();
-      this.notice.showSuccess('Data saved manually');
     } catch (error) {
       this.notice.showError(
         error instanceof Error ? error.message : String(error)

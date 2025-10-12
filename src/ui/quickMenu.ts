@@ -202,8 +202,8 @@ export class QuickMenu extends SuggestModal<SlotSuggestion> {
 
   private async handleUndo(): Promise<void> {
     try {
-      await this.slotManager.undoLastAction();
-      this.notice.showSuccess('Action undone');
+      // Undo functionality removed
+      this.notice.showInfo('Undo feature not available');
       this.refreshData();
     } catch (error) {
       this.notice.showError(

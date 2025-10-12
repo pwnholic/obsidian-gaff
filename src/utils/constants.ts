@@ -7,13 +7,11 @@ export const DEFAULT_SETTINGS = {
   maxSlots: 9,
   notifications: true,
   confirmDelete: true,
-  telemetry: false,
 };
 
 export const DEFAULT_WORKSPACE_NAME = 'Default Workspace';
 export const SCHEMA_VERSION = 1;
 export const BACKUP_PREFIX = 'geff_backup_';
-export const DATA_FILE = 'geff_data.json';
 
 export const DEFAULT_HOTKEYS = {
   'add-current-note': 'Ctrl+Shift+A',

@@ -2,11 +2,7 @@ import { App, TFile } from 'obsidian';
 import { GeffData, GeffSettings, DEFAULT_SETTINGS } from '../types/geff';
 import { ValidationUtils } from '../utils/validation';
 import { BackupUtils } from '../utils/backup';
-import {
-  DATA_FILE,
-  SCHEMA_VERSION,
-  DEFAULT_WORKSPACE_NAME,
-} from '../utils/constants';
+import { SCHEMA_VERSION, DEFAULT_WORKSPACE_NAME } from '../utils/constants';
 
 export class DataManager {
   private data: GeffData;
@@ -21,8 +17,9 @@ export class DataManager {
 
   async load(): Promise<void> {
     try {
-      console.log('Geff: Loading data from file:', DATA_FILE);
-      const dataFile = this.app.vault.getAbstractFileByPath(DATA_FILE);
+      const dataFilePath = this.settings.dataPath;
+      console.log('Geff: Loading data from file:', dataFilePath);
+      const dataFile = this.app.vault.getAbstractFileByPath(dataFilePath);
 
       if (dataFile instanceof TFile) {
         console.log('Geff: Data file found, reading content...');
@@ -61,11 +58,12 @@ export class DataManager {
   async save(): Promise<void> {
     try {
       this.data.updatedAt = new Date().toISOString();
+      const dataFilePath = this.settings.dataPath;
 
       const content = JSON.stringify(this.data, null, 2);
 
       // Debug logging
-      console.log('Geff: Saving data to file:', DATA_FILE);
+      console.log('Geff: Saving data to file:', dataFilePath);
       console.log(
         'Geff: Data content preview:',
         content.substring(0, 200) + '...'
@@ -74,10 +72,10 @@ export class DataManager {
       console.log('Geff: Active workspace ID:', this.data.activeWorkspaceId);
 
       // Use vault.adapter.write for more reliable file writing
-      await this.app.vault.adapter.write(DATA_FILE, content);
+      await this.app.vault.adapter.write(dataFilePath, content);
 
       // Verify the file was written correctly
-      const verifyFile = this.app.vault.getAbstractFileByPath(DATA_FILE);
+      const verifyFile = this.app.vault.getAbstractFileByPath(dataFilePath);
       if (verifyFile instanceof TFile) {
         const verifyContent = await this.app.vault.read(verifyFile);
         const verifyData = JSON.parse(verifyContent);
@@ -150,26 +148,6 @@ export class DataManager {
       ...data,
       schemaVersion: SCHEMA_VERSION,
     };
-  }
-
-  async exportData(): Promise<string> {
-    return JSON.stringify(this.data, null, 2);
-  }
-
-  async importData(jsonContent: string): Promise<void> {
-    try {
-      const importedData = JSON.parse(jsonContent);
-
-      if (!ValidationUtils.validateGeffData(importedData)) {
-        throw new Error('Invalid data format');
-      }
-
-      this.setData(importedData);
-      await this.save();
-    } catch (error) {
-      console.error('Failed to import data:', error);
-      throw new Error('Failed to import data');
-    }
   }
 
   async resetToDefault(): Promise<void> {
