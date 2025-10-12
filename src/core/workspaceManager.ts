@@ -150,11 +150,23 @@ export class WorkspaceManager {
       'Geff: getActiveWorkspace - workspace slots count:',
       activeWorkspace?.slots.length || 0
     );
+    console.log(
+      'Geff: getActiveWorkspace - all workspace IDs:',
+      data.workspaces.map((w) => w.id)
+    );
     return activeWorkspace;
   }
 
   getAllWorkspaces(): Workspace[] {
     const data = this.dataManager.getData();
+    console.log(
+      'Geff: getAllWorkspaces - total workspaces:',
+      data.workspaces.length
+    );
+    console.log(
+      'Geff: getAllWorkspaces - workspace names:',
+      data.workspaces.map((w) => w.name)
+    );
     return [...data.workspaces];
   }
 

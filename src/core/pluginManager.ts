@@ -446,8 +446,18 @@ export class PluginManager {
 
   private async handleSwitchWorkspace(): Promise<void> {
     try {
+      console.log('Geff: handleSwitchWorkspace - starting...');
       const workspaces = this.workspaceManager.getAllWorkspaces();
       const activeWorkspace = this.workspaceManager.getActiveWorkspace();
+
+      console.log(
+        'Geff: handleSwitchWorkspace - workspaces count:',
+        workspaces.length
+      );
+      console.log(
+        'Geff: handleSwitchWorkspace - active workspace:',
+        activeWorkspace?.name || 'null'
+      );
 
       if (workspaces.length <= 1) {
         this.notice.showError('No other workspaces available');
