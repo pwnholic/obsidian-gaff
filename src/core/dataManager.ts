@@ -45,7 +45,74 @@ export class DataManager {
         this.data.workspaces.length
       );
 
-      const dataFile = this.app.vault.getAbstractFileByPath(dataFilePath);
+      // Try both relative and absolute paths with retry
+      let dataFile = this.app.vault.getAbstractFileByPath(dataFilePath);
+
+      // If not found, wait a bit and retry (Obsidian might still be initializing)
+      if (!dataFile) {
+        console.log(
+          'Geff: File not found on first try, waiting 100ms and retrying...'
+        );
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        dataFile = this.app.vault.getAbstractFileByPath(dataFilePath);
+      }
+
+      // If still not found with relative path, try to construct from vault adapter
+      if (!dataFile && this.app.vault.adapter) {
+        try {
+          const exists = await this.app.vault.adapter.exists(dataFilePath);
+          console.log('Geff: File exists check with adapter:', exists);
+          if (exists) {
+            console.log(
+              'Geff: File exists but not found by getAbstractFileByPath, trying adapter.read'
+            );
+            const content = await this.app.vault.adapter.read(dataFilePath);
+            console.log(
+              'Geff: Successfully read file with adapter, content length:',
+              content.length
+            );
+
+            const parsedData = JSON.parse(content);
+            const totalSlots =
+              parsedData.workspaces?.reduce(
+                (sum: number, ws: Workspace) => sum + (ws.slots?.length || 0),
+                0
+              ) || 0;
+            console.log(
+              'Geff: Parsed data from adapter - workspaces:',
+              parsedData.workspaces?.length || 0,
+              'total slots:',
+              totalSlots
+            );
+
+            if (ValidationUtils.validateGeffData(parsedData)) {
+              this.data = this.migrateDataIfNeeded(parsedData);
+              console.log(
+                'Geff: Data loaded successfully via adapter, active workspace:',
+                this.data.activeWorkspaceId
+              );
+              console.log(
+                'Geff: After load - workspaces:',
+                this.data.workspaces.length
+              );
+              console.log(
+                'Geff: After load - slots in active workspace:',
+                this.data.workspaces.find(
+                  (w) => w.id === this.data.activeWorkspaceId
+                )?.slots?.length || 0
+              );
+              return; // Success, exit early
+            }
+          }
+        } catch (adapterError) {
+          console.warn('Geff: Adapter read failed:', adapterError);
+        }
+      }
+
+      console.log(
+        'Geff: Data file found by getAbstractFileByPath:',
+        !!dataFile
+      );
 
       if (dataFile instanceof TFile) {
         console.log('Geff: Data file found, reading content...');
