@@ -2,8 +2,6 @@
 
 > Quick navigation between notes using slots and workspaces, inspired by Harpoon
 
-![Obsidian Geff Logo](https://via.placeholder.com/150x150/4A90E2/FFFFFF?text=Geff)
-
 Obsidian Geff is a powerful navigation plugin that allows you to quickly jump between your most important notes using numbered slots and organized workspaces. Inspired by the popular Harpoon plugin for Neovim, Geff brings fast, keyboard-driven navigation to Obsidian.
 
 ## Features
@@ -61,14 +59,14 @@ Obsidian Geff is a powerful navigation plugin that allows you to quickly jump be
 
 ## ⌨️ Default Hotkeys
 
-| Action           | Windows/Linux  | macOS         |
-| ---------------- | -------------- | ------------- |
-| Add Current Note | `Ctrl+Shift+A` | `Cmd+Shift+A` |
-| Open Quick Menu  | `Ctrl+E`       | `Cmd+E`       |
-| Go to Slot 1-9   | `Ctrl+1-9`     | `Cmd+1-9`     |
-| Select Workspace | `Ctrl+Shift+S` | `Cmd+Shift+S` |
-| Create Workspace | `Ctrl+Shift+N` | `Cmd+Shift+N` |
-| Switch to Next Workspace | `Ctrl+Alt+S` | `Cmd+Alt+S` |
+| Action                   | Windows/Linux  | macOS         |
+| ------------------------ | -------------- | ------------- |
+| Add Current Note         | `Ctrl+Shift+A` | `Cmd+Shift+A` |
+| Open Quick Menu          | `Ctrl+E`       | `Cmd+E`       |
+| Go to Slot 1-9           | `Ctrl+1-9`     | `Cmd+1-9`     |
+| Select Workspace         | `Ctrl+Shift+S` | `Cmd+Shift+S` |
+| Create Workspace         | `Ctrl+Shift+N` | `Cmd+Shift+N` |
+| Switch to Next Workspace | `Ctrl+Alt+S`   | `Cmd+Alt+S`   |
 
 ## Detailed Usage
 
@@ -299,14 +297,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Harpoon**: Inspiration from the Neovim plugin
 - **Obsidian Team**: For the amazing note-taking platform
 - **Community**: For feedback, suggestions, and support
-
-## Contact
-
-- **GitHub**: [Your GitHub Profile](https://github.com/your-username)
-- **Twitter**: [@YourTwitter](https://twitter.com/your-twitter)
-- **Email**: <your.email@example.com>
-
----
-
-**Made with passion for the Obsidian community**
-
