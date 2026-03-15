@@ -1,0 +1,104 @@
+/* Gaff Modal */
+.gaff-modal {
+  padding: 8px 0;
+}
+
+.gaff-modal-header {
+  text-align: center;
+  margin-bottom: 16px;
+  color: var(--text-accent);
+  font-size: 1.1em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.gaff-modal-empty {
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.gaff-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gaff-modal-item {
+  padding: 8px 10px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background-color 0.1s ease;
+}
+
+.gaff-modal-item:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+.gaff-modal-item--selected {
+  background-color: var(--background-modifier-hover);
+  border-left-color: var(--interactive-accent);
+}
+
+.gaff-modal-item__index {
+  color: var(--text-accent);
+  font-weight: bold;
+  margin-right: 10px;
+  min-width: 25px;
+  font-family: var(--font-monospace);
+  font-size: 0.9em;
+}
+
+.gaff-modal-item__index--dynamic {
+  color: var(--text-warning);
+}
+
+.gaff-modal-item__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gaff-modal-item__name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gaff-modal-item__dynamic-tag {
+  font-size: 0.7em;
+  color: var(--text-warning);
+  margin-left: 6px;
+}
+
+.gaff-modal-item__path {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gaff-modal-footer {
+  margin-top: 16px;
+  font-size: 0.8em;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.gaff-modal-footer code {
+  font-size: 0.95em;
+  background: var(--background-modifier-hover);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* Workspace Suggest Modal */
+.gaff-workspace-active {
+  color: var(--interactive-accent);
+  font-weight: bold;
+}

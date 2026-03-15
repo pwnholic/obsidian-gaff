@@ -1,0 +1,11 @@
+{
+    "id": "obsidian-gaff",
+    "name": "Gaff",
+    "version": "1.0.0",
+    "minAppVersion": "0.15.0",
+    "description": "Zero-friction context switching between files, inspired by ThePrimeagen's Harpoon.",
+    "author": "You",
+    "authorUrl": "",
+    "isDesktopOnly": false
+}
+

@@ -1,0 +1,54 @@
+{
+  "defaultWorkspace": "default",
+  "maxHooks": 5,
+  "showFolderPath": true,
+  "dynamicPin": "none",
+  "customDynamicPinPath": "_journal/YYYY/MMMM/DD.md",
+  "modalKeybindings": {
+    "down": [
+      "j",
+      "ArrowDown"
+    ],
+    "up": [
+      "k",
+      "ArrowUp"
+    ],
+    "open": [
+      "Enter"
+    ],
+    "openVertical": [
+      "Ctrl+v",
+      "Cmd+v"
+    ],
+    "openHorizontal": [
+      "Ctrl+h",
+      "Cmd+h"
+    ],
+    "openTab": [
+      "Ctrl+t",
+      "Cmd+t"
+    ],
+    "remove": [
+      "dd"
+    ],
+    "swapDown": [
+      "Shift+J"
+    ],
+    "swapUp": [
+      "Shift+K"
+    ],
+    "close": [
+      "Escape",
+      "q"
+    ],
+    "openSplit": [
+      "Ctrl+Enter",
+      "Cmd+Enter"
+    ]
+  },
+  "workspaces": {
+    "default": []
+  },
+  "activeWorkspace": "default",
+  "useVimBindings": true
+}
